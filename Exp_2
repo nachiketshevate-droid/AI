@@ -1,0 +1,69 @@
+from collections import deque
+
+grid = [
+    ['S', '.', '.', '#', '.'],
+    ['#', '#', '.', '#', '.'],
+    ['.', '.', '.', '.', '.'],
+    ['.', '#', '#', '#', '.'],
+    ['.', '.', '.', '.', 'G']
+]
+
+start, goal = (0, 0), (4, 4)
+R, C = len(grid), len(grid[0])
+directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
+
+
+class Agent:
+    def __init__(self):
+        self.pos = start
+        self.memory = {}
+        self.path = [start]
+
+    def perceive(self):
+        r, c = self.pos
+        for dr, dc in [(0, 0)] + directions:
+            nr, nc = r + dr, c + dc
+            if 0 <= nr < R and 0 <= nc < C:
+                self.memory[(nr, nc)] = grid[nr][nc]
+
+    def find_path(self):
+        q = deque([(self.pos, [self.pos])])
+        seen = {self.pos}
+
+        while q:
+            (r, c), path = q.popleft()
+
+            if (r, c) == goal:
+                return path
+
+            for dr, dc in directions:
+                cell = (r + dr, c + dc)
+                nr, nc = cell
+
+                if (0 <= nr < R and 0 <= nc < C
+                    and cell not in seen
+                    and self.memory.get(cell, '.') != '#'):
+                    seen.add(cell)
+                    q.append((cell, path + [cell]))
+
+        return None
+
+    def run(self):
+        while self.pos != goal:
+            self.perceive()
+            path = self.find_path()
+
+            if not path or len(path) < 2:
+                print("No path found.")
+                return
+
+            self.pos = path[1]
+            self.path.append(self.pos)
+
+        print("Goal Reached!")
+        print("Complete Path:", self.path)
+        print("Internal Map:", self.memory)
+
+
+agent = Agent()
+agent.run()
